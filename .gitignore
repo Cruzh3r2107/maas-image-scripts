@@ -1,0 +1,16 @@
+# real per-project files — never commit
+*-customization.env
+!project-name-customization.env
+local_build_env
+store.auth
+project-credential/
+# build state
+.done_*
+packer.log
+OVMF_*.fd
+seeds-*.iso
+output-*/
+deploy/
+out/
+work/
+gadget/

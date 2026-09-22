@@ -1,0 +1,10 @@
+# Machine-specific build variables. Export before running build-classic.sh:
+#   set -a; source local_build_env; set +a
+BOT_USERNAME=<ubuntu-one-id>
+LAUNCHPAD_PROJECT=<project>
+LAUNCHPAD_TEAM=<team>
+JOB_NAME=<project>-classic-24.04
+MILESTONE=alpha
+BUILD_ID=01
+# name must match the ${PPA_ACCESS_TOKEN_n} referenced in build-setup-<project>.yaml
+PPA_ACCESS_TOKEN_1=<ubuntu-one-id>:<ppa-access-token>

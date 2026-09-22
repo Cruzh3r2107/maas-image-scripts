@@ -1,0 +1,69 @@
+diff --git a/build-classic.sh b/build-classic.sh
+index b1a794a..5622a0f 100755
+--- a/build-classic.sh
++++ b/build-classic.sh
+@@ -627,6 +627,57 @@ EOF
+     touch .done_"${FUNCNAME[0]}"
+ }
+ 
++function build-maas-image()
++{
++    if [ -f ".done_${FUNCNAME[0]}" ]; then
++        echo "Skip ${FUNCNAME[0]}...(already ran)"
++        return
++    fi
++
++    if [ -n "$(LC_ALL=C type -t _${FUNCNAME[0]})" ]; then
++        echo "--> Calling Customized _${FUNCNAME[0]}.."
++        eval "_${FUNCNAME[0]}" "$@"
++    else
++        echo "--> Calling Default _${FUNCNAME[0]}.."
++        ARCH=amd64
++        OVMF_SFX=""
++        BASEIMAGE=${OUTDIR}/${IMAGE}
++        BASEIMAGECKSUM=${OUTDIR}/${IMAGE}.sha256sum
++        # prepare-outputs compresses the image; packer needs the raw .img
++        if [ ! -f "${BASEIMAGE}" ] && [ -f "${BASEIMAGE}.xz" ]; then
++            unxz -k "${BASEIMAGE}.xz"
++        fi
++        if [ ! -s "${BASEIMAGECKSUM}" ] && [ -f "${BASEIMAGE}" ]; then
++            (cd "${OUTDIR}" && sha256sum "${IMAGE}" > "${IMAGE}.sha256sum")
++        fi
++        if [ ! -f "/usr/share/OVMF/OVMF_CODE.fd" ]; then
++            OVMF_SFX="_4M"
++        fi
++
++        truncate -s 2m OVMF_VARS.fd
++        cp /usr/share/OVMF/OVMF_CODE${OVMF_SFX}.fd OVMF_CODE.fd
++
++        retry=0
++        packer init .
++        until packer build -var ubuntu_series=${SERIES} \
++                     -var base_image=${BASEIMAGE} \
++                     -var base_image_checksum=${BASEIMAGECKSUM} \
++                     -var architecture=${ARCH} \
++                     -var ovmf_suffix=${OVMF_SFX} \
++                     -var customize_script=project-name-customize.sh \
++                     -var output_directory=${OUTDIR} \
++                     -var timeout=1h .
++        do
++            retry=$((retry + 1))
++            if [ $retry -ge 5 ]; then
++                break
++            fi
++        done
++    fi
++
++    touch .done_"${FUNCNAME[0]}"
++}
++
+ function prepare-outputs()
+ {
+     if [ -f ".done_${FUNCNAME[0]}" ]; then
+@@ -759,4 +810,6 @@ generate-manifest "$IMAGE_DEFINITION" "$OUTDIR" "${IMAGE}.manifest" "$SERIES" "$
+ 
+ prepare-outputs "$IMAGE_DEFINITION" "$DIR" "$OUTDIR" "$IMAGE"
+ 
++build-maas-image
++
+ exit 0

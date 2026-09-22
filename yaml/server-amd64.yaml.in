@@ -1,0 +1,97 @@
+name: server-amd64
+display-name: Ubuntu Noble Server amd64
+revision: 1
+architecture: amd64
+series: noble
+class: preinstalled
+gadget:
+  url: file://gadget/prime
+  type: "prebuilt"
+rootfs:
+  sources-list-deb822: true
+  tarball:
+    url: file://../rootfs.tar.xz
+customization:
+  cloud-init:
+    meta-data: |
+      instance_id: ubuntu
+      local-hostname: ubuntu
+    user-data: |
+      #cloud-config
+      chpasswd:
+        expire: true
+        users:
+          - name: ubuntu
+            password: ubuntu
+            type: text
+    network-config: |
+      version: 2
+      renderer: NetworkManager
+  # The section extra-ppas will be merged from build-setup-<env>.yaml
+  extra-ppas:
+  extra-packages:
+    - name: ubuntu-oem-keyring
+    - name: <project>-meta   # OEM metapackage from the private PPA
+    - name: linux-firmware
+    - name: linux-generic
+    - name: initramfs-tools-devices
+    - name: shim
+    - name: shim-signed
+    - name: grub-efi-amd64
+    - name: grub-efi-amd64-bin
+    - name: grub-efi-amd64-signed
+    - name: grub2-common
+    - name: netplan.io
+    - name: net-tools
+    - name: wireless-tools
+    - name: wireless-regdb
+    - name: wpasupplicant
+    - name: bluez
+    - name: tpm2-tools
+    - name: network-manager
+    - name: dkms
+    - name: <driver-dkms-package>   # e.g. an out-of-tree driver from the public PPA
+  extra-snaps:
+    - name: snapd
+    - name: core24
+    - name: core22
+    -
+      name: lxd
+      channel: 5.21/stable
+  manual:
+    make-dirs:
+      -
+        path: /boot/efi
+        permissions: 0755
+    copy-file:
+      -
+        source: ../hooks/workaround_reconfigure_dbus_for_netplan.sh
+        destination: /home
+      -
+        source: ../hooks/cleanup.sh
+        destination: /home
+    execute:
+      -
+        path: /home/workaround_reconfigure_dbus_for_netplan.sh
+      -
+        path: /home/cleanup.sh
+  fstab:
+    -
+      label: "writable"
+      mountpoint: "/"
+      filesystem-type: "ext4"
+      mount-options: "defaults"
+      dump: false
+      fsck-order: 1
+    -
+      label: "system-boot"
+      mountpoint: "/boot/efi"
+      filesystem-type: "vfat"
+      mount-options: "defaults"
+      dump: false
+      fsck-order: 1
+artifacts:
+  img:
+    - name: project-name-noble-server-amd64.img
+  manifest:
+    name: filesystem.manifest

@@ -1,0 +1,94 @@
+# Copyright (C) 2025 Canonical Ltd
+#
+
+# Fundamental project and image metadata, typically utilized to construct the
+# image name and the buildstamp embedded within the image.
+#
+# launchpad-project: <str>
+# launchpad-team: <str>
+# series: <str>
+# build-id: <str>
+#
+launchpad-project: <project>
+launchpad-team: <team>
+series: classic-24.04
+build-id: ${BUILD_ID}
+
+# Specifies the path to the image definition template, which is used to render
+# the final image definition for the `ubuntu-image` command via the `--yaml`
+# option.
+#
+# image-definition-template: <str>
+#
+image-definition-template: yaml/server-amd64.yaml.in
+
+# Here we checkout source from git repository and build gadget (gadget snap)
+# locally so we can inject additional boot assets if needed.
+#
+# Use git+ssh://<UBUNTU_ONE_EMAIL>@git.launchpad.net/... or configure USER
+# inside ~/.ssh/config (or /root/.ssh/config when runs with sudo) for private
+# SSH access.
+#
+# gadget: <dict>
+#   url: <str>
+#   branch: <str>
+#   ref: <str> (optional)
+#
+gadget:
+  url: git+ssh://git.launchpad.net/~<team>/<project>/+git/gadget-snap
+  branch: classic
+
+# Personal Package Archives (PPAs) that provide extra packages to be
+# preloaded into the IoT image.
+#
+# customization:
+#   extra-ppas: <list> (optional)
+#     - name: <str>
+#       fingerprint: <str>
+#       auth: <str>
+#       keep-enabled: <bool>
+#
+customization:
+  extra-ppas:
+    - name: <team>/<private-ppa>
+      fingerprint: <fingerprint>
+      auth: ${PPA_ACCESS_TOKEN_1}   # exported from local_build_env
+      keep-enabled: false
+    - name: <owner>/<public-ppa>
+      fingerprint: <fingerprint>
+      keep-enabled: true
+
+# Sector size of the target image/disk. Valid values: 512 (default) or 4096.
+# Set to 4096 when the target storage uses 4KB physical sectors to ensure
+# proper alignment and avoid partitioning or boot issues.
+#
+# sector-size: <int> 512 (default) | 4096
+#
+sector-size: 512
+
+# Specifies the version selection for the build tools utilized in the image
+# creation process.
+#
+# build-environment: <dict>
+#   snapcraft: <dict>
+#     channel: <str>
+#     revision: <str> (optional)
+#   ubuntu-image: <dict>
+#     channel: <str>
+#     revision: <str> (optional)
+build-environment:
+  snapcraft:
+    channel: 8.x/candidate
+  ubuntu-image:
+    channel: latest/candidate
+
+# Proxies to be used during the build process. This values are supplied to the
+# snapcraft command when building the gadget snap.
+#
+# proxies: <dict> (optional)
+#   http_proxy: <str> (optional)
+#   https_proxy: <str> (optional)
+#
+proxies:
+  http_proxy: #http://proxy.internal:3128
+  https_proxy: #http://proxy.internal:3128
